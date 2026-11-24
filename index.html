@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#FAF8F3" />
+    <meta
+      name="description"
+      content="Read Ladder — 为阅读困难的孩子设计的分块阅读练习工具。按短语或词切分文本、逐块朗读、导出 PDF。"
+    />
+    <title>阅读阶梯 · Read Ladder</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232F5D50'/%3E%3Cpath d='M9 11h14M9 16h10M9 21h14' stroke='%23FAF8F3' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#reader" data-i18n="a11y.skip">跳到正文</a>
+
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div class="brand-text">
+          <h1>Read Ladder</h1>
+          <p data-i18n="app.tagline">把一段话切成小台阶，一步一步读下去</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" class="btn ghost" id="btn-lang" aria-label="切换语言">
+          <span id="lang-label">EN</span>
+        </button>
+        <button type="button" class="btn primary" id="btn-print">
+          <span data-i18n="action.export">导出 PDF</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="levels" id="levels" role="group" aria-labelledby="levels-label">
+        <span class="tool-label" id="levels-label" data-i18n="tool.level">辅助等级</span>
+        <button type="button" class="lv" data-level="1">
+          <b>1</b><span data-i18n="level.1">长句块</span>
+        </button>
+        <button type="button" class="lv" data-level="2">
+          <b>2</b><span data-i18n="level.2">短语</span>
+        </button>
+        <button type="button" class="lv" data-level="3">
+          <b>3</b><span data-i18n="level.3">词</span>
+        </button>
+      </div>
+
+      <div class="tools">
+        <label class="tool" for="rate">
+          <span class="tool-label" data-i18n="tool.rate">语速</span>
+          <input id="rate" type="range" min="0.6" max="1.3" step="0.05" value="0.9" />
+          <output id="rate-val" for="rate">0.90×</output>
+        </label>
+        <label class="tool" for="voice">
+          <span class="tool-label" data-i18n="tool.voice">语音</span>
+          <select id="voice"></select>
+        </label>
+        <div class="tool fs-group" role="group" aria-labelledby="fs-label">
+          <span class="tool-label" id="fs-label" data-i18n="tool.font">字号</span>
+          <button type="button" id="fs-minus" aria-label="缩小字号">A−</button>
+          <button type="button" id="fs-plus" aria-label="放大字号">A+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <aside class="library" aria-labelledby="lib-title">
+        <div class="lib-head">
+          <h2 id="lib-title" data-i18n="library.title">内容库</h2>
+          <button type="button" class="link" id="btn-paste" data-i18n="action.paste">粘贴文本</button>
+        </div>
+        <ul class="lib-list" id="lib-list"></ul>
+      </aside>
+
+      <main class="reader-col">
+        <div class="doc-head">
+          <h2 id="doc-title">—</h2>
+          <p class="doc-meta" id="doc-meta"></p>
+        </div>
+
+        <p class="level-hint" id="level-hint"></p>
+
+        <article id="reader" class="reader" data-lang="zh" aria-live="off"></article>
+
+        <p class="reader-hint" data-i18n="hint.block">
+          点一下色块就会朗读；电脑上把鼠标停在色块上两秒也会朗读。
+        </p>
+      </main>
+    </div>
+
+    <dialog id="paste-dialog" class="sheet">
+      <form method="dialog">
+        <h2 data-i18n="paste.title">粘贴一段文字</h2>
+        <p class="muted" data-i18n="paste.desc">
+          中文或英文都可以。建议整段粘贴，标点会自带停顿。
+        </p>
+        <textarea
+          id="paste-text"
+          rows="9"
+          spellcheck="false"
+          data-i18n-placeholder="paste.placeholder"
+          placeholder="把要读的文字粘贴到这里…"
+        ></textarea>
+        <p class="counter" id="paste-counter"></p>
+        <div class="sheet-actions">
+          <button type="button" class="btn ghost" id="paste-cancel" data-i18n="action.cancel">
+            取消
+          </button>
+          <button type="button" class="btn primary" id="paste-apply" data-i18n="action.apply">
+            开始阅读
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="print-head" aria-hidden="true">
+      <div class="print-title" id="print-title"></div>
+      <div class="print-meta" id="print-meta"></div>
+    </div>
+
+    <footer class="foot">
+      <span data-i18n="footer.note">全部内容为公版或原创，可自由用于教学。</span>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
