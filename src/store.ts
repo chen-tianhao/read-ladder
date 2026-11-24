@@ -11,6 +11,8 @@ export interface State {
   voiceURI: string;
   docId: string;
   customText: string;
+  /** 汉字上方显示拼音，默认关闭 */
+  pinyin: boolean;
 }
 
 export const DEFAULTS: State = {
@@ -21,6 +23,7 @@ export const DEFAULTS: State = {
   voiceURI: '',
   docId: 'kitten',
   customText: '',
+  pinyin: false,
 };
 
 export function loadState(): State {

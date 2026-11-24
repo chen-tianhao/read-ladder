@@ -304,6 +304,59 @@ select:disabled {
   color: var(--ink);
 }
 
+/* 拼音开关 */
+.switch {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.switch-label {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.switch-track {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  transition: background-color 0.18s;
+}
+
+.switch-dot {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(43, 42, 38, 0.25);
+  transition: transform 0.18s;
+}
+
+.switch[aria-checked="true"] .switch-track {
+  background: var(--accent);
+}
+
+.switch[aria-checked="true"] .switch-dot {
+  transform: translateX(16px);
+}
+
+.switch:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.switch.is-busy {
+  opacity: 0.55;
+}
+
 /* ── 主体 ──────────────────────────────────────────────────────────────── */
 
 .stage {
@@ -360,6 +413,11 @@ select:disabled {
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+/* 移动端横向滚动时，卡片不能被压缩成一条竖排文字 */
+.lib-list > li {
+  flex: none;
 }
 
 .lib-item {
@@ -501,11 +559,10 @@ select:disabled {
   padding: 0.04em 0.2em;
 }
 
-/* 中文词 / 短语区块最多 4 字，禁止跨行，避免「回家/的」这种断在词组中间。
-   英文块含多个单词、宽度不可控，窄屏大字号下 nowrap 会溢出，故不施加。
-   句级长块两端都允许换行。 */
-.reader[data-lang="zh"][data-level="2"] .chunk,
-.reader[data-lang="zh"][data-level="3"] .chunk {
+/* 中文词 / 短语区块最多 4 字，连同句读一起禁止跨行，避免「回家/的」断在词组中间，
+   也避免句号被挤到下一行开头。英文块含多个单词、宽度不可控，窄屏大字号会溢出，故不施加。 */
+.reader[data-lang="zh"][data-level="2"] .unit,
+.reader[data-lang="zh"][data-level="3"] .unit {
   white-space: nowrap;
 }
 
@@ -551,6 +608,30 @@ select:disabled {
   font-size: 12.5px;
   color: var(--ink-3);
   max-width: 66ch;
+}
+
+/* ── 拼音注音 ──────────────────────────────────────────────────────────── */
+
+.reader[data-pinyin="1"] {
+  line-height: 2.75;
+  /* 注音会把字距撑开，区块间距同比放大，块边界才分得清 */
+  --gap-1: 0.72em;
+  --gap-2: 0.55em;
+  --gap-3: 0.3em;
+}
+
+.reader ruby {
+  ruby-position: over;
+  ruby-align: center;
+}
+
+.reader rt {
+  font-size: 0.5em;
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  user-select: none;
 }
 
 /* ── 弹层与提示 ────────────────────────────────────────────────────────── */

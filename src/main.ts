@@ -21,6 +21,7 @@ const ui = {
   rate: $<HTMLInputElement>('rate'),
   rateVal: $<HTMLOutputElement>('rate-val'),
   voice: $<HTMLSelectElement>('voice'),
+  btnPinyin: $<HTMLButtonElement>('btn-pinyin'),
   fsMinus: $('fs-minus'),
   fsPlus: $('fs-plus'),
   btnLang: $('btn-lang'),
@@ -74,6 +75,60 @@ function updatePrintHead(): void {
     .join(' · ');
 }
 
+// ── 拼音 ────────────────────────────────────────────────────────────────────
+
+type PinyinArrayFn = (text: string, opts: Record<string, unknown>) => string[];
+
+const CJK_CHAR = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
+
+let pinyinFn: PinyinArrayFn | null = null;
+let pinyinPending: Promise<void> | null = null;
+
+/** 拼音词库约 325 KB，只在第一次打开开关时按需加载，不计入首屏 */
+async function loadPinyin(): Promise<boolean> {
+  if (pinyinFn) return true;
+  if (!pinyinPending) {
+    pinyinPending = import('pinyin-pro').then((mod) => {
+      pinyinFn = mod.pinyin as unknown as PinyinArrayFn;
+    });
+  }
+  try {
+    await pinyinPending;
+  } catch {
+    pinyinPending = null;
+  }
+  return pinyinFn !== null;
+}
+
+/** 逐字挂 ruby，拼音才能与汉字严格对齐 */
+function fillWithRuby(host: HTMLElement, text: string): void {
+  const chars = Array.from(text);
+  const cjkCount = chars.filter((ch) => CJK_CHAR.test(ch)).length;
+  const reading = pinyinFn
+    ? pinyinFn(text, { type: 'array', toneType: 'symbol', nonZh: 'removed' })
+    : [];
+
+  // 字数对不上就不硬套，避免拼音整体错位
+  if (!pinyinFn || reading.length !== cjkCount) {
+    host.textContent = text;
+    return;
+  }
+
+  let i = 0;
+  for (const ch of chars) {
+    if (!CJK_CHAR.test(ch)) {
+      host.append(document.createTextNode(ch));
+      continue;
+    }
+    const ruby = document.createElement('ruby');
+    ruby.textContent = ch;
+    const rt = document.createElement('rt');
+    rt.textContent = reading[i++] ?? '';
+    ruby.append(rt);
+    host.append(ruby);
+  }
+}
+
 interface DocView {
   id: string;
   lang: Lang;
@@ -116,6 +171,7 @@ function render(): void {
 
   const frag = document.createDocumentFragment();
   let index = 0;
+  const usePinyin = state.pinyin && seg.lang === 'zh' && pinyinFn !== null;
 
   for (const para of seg.paras) {
     const p = document.createElement('p');
@@ -130,7 +186,8 @@ function render(): void {
 
       const span = document.createElement('span');
       span.className = `chunk c${index % 5}`;
-      span.textContent = c.text;
+      if (usePinyin) fillWithRuby(span, c.text);
+      else span.textContent = c.text;
       unit.append(span);
 
       if (c.trail) {
@@ -169,6 +226,7 @@ function render(): void {
   lastMeta = meta;
   lastSource = doc.source;
   updatePrintHead();
+  syncPinyin(seg.lang);
 
   document.title = `${doc.title} · Read Ladder`;
   syncUrl();
@@ -256,6 +314,15 @@ function applyFontSize(): void {
     '--print-size',
     `${(state.fontPx * 0.75).toFixed(1)}pt`,
   );
+}
+
+function syncPinyin(docLang: Lang = currentDoc().lang): void {
+  const applicable = docLang === 'zh';
+  ui.btnPinyin.setAttribute('aria-checked', String(state.pinyin));
+  ui.btnPinyin.disabled = !applicable;
+  ui.reader.dataset.pinyin = state.pinyin && applicable ? '1' : '0';
+  if (applicable) ui.btnPinyin.removeAttribute('title');
+  else ui.btnPinyin.title = t(state.uiLang, 'pinyin.onlyZh');
 }
 
 function syncChrome(): void {
@@ -423,6 +490,24 @@ ui.voice.addEventListener('change', () => {
   saveState(state);
 });
 
+ui.btnPinyin.addEventListener('click', async () => {
+  if (ui.btnPinyin.disabled) return;
+
+  if (!state.pinyin && !pinyinFn) {
+    ui.btnPinyin.classList.add('is-busy');
+    const ok = await loadPinyin();
+    ui.btnPinyin.classList.remove('is-busy');
+    if (!ok) {
+      toast(t(state.uiLang, 'pinyin.failed'));
+      return;
+    }
+  }
+
+  state.pinyin = !state.pinyin;
+  saveState(state);
+  render();
+});
+
 const setFont = (px: number): void => {
   state.fontPx = Math.min(32, Math.max(16, px));
   applyFontSize();
@@ -465,4 +550,10 @@ window.addEventListener('beforeunload', () => speaker.stop());
 
 speaker.onVoices(() => fillVoices());
 
-applyAll();
+async function boot(): Promise<void> {
+  // 上次退出时开着拼音的话，先等词库就绪再首屏渲染，避免先闪一下无拼音
+  if (state.pinyin) await loadPinyin();
+  applyAll();
+}
+
+void boot();

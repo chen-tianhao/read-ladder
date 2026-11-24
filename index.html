@@ -48,6 +48,16 @@
         <button type="button" class="lv" data-level="3">
           <b>3</b><span data-i18n="level.3">词</span>
         </button>
+        <button
+          type="button"
+          class="tool switch"
+          id="btn-pinyin"
+          role="switch"
+          aria-checked="false"
+        >
+          <span class="switch-label" data-i18n="tool.pinyin">拼音</span>
+          <span class="switch-track" aria-hidden="true"><span class="switch-dot"></span></span>
+        </button>
       </div>
 
       <div class="tools">
@@ -72,7 +82,7 @@
       <aside class="library" aria-labelledby="lib-title">
         <div class="lib-head">
           <h2 id="lib-title" data-i18n="library.title">内容库</h2>
-          <button type="button" class="btn ghost sm" id="btn-paste" data-i18n="action.paste">
+          <button type="button" class="btn primary sm" id="btn-paste" data-i18n="action.paste">
             自定义内容
           </button>
         </div>

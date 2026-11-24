@@ -13,6 +13,7 @@ const zh: Dict = {
   'tool.rate': '语速',
   'tool.voice': '语音',
   'tool.font': '字号',
+  'tool.pinyin': '拼音',
   'level.1': '长句块',
   'level.2': '短语',
   'level.3': '词',
@@ -28,6 +29,8 @@ const zh: Dict = {
 
   'voice.auto': '自动选择',
   'voice.none': '系统未安装语音',
+  'pinyin.onlyZh': '拼音只对中文内容生效',
+  'pinyin.failed': '拼音词库加载失败，请检查网络后重试',
   'hint.block': '点一下色块就会朗读；电脑上把鼠标停在色块上两秒也会朗读。',
 
   'paste.title': '自定义阅读内容',
@@ -55,6 +58,7 @@ const en: Dict = {
   'tool.rate': 'Speed',
   'tool.voice': 'Voice',
   'tool.font': 'Text size',
+  'tool.pinyin': 'Pinyin',
   'level.1': 'Clause',
   'level.2': 'Phrase',
   'level.3': 'Word',
@@ -70,6 +74,8 @@ const en: Dict = {
 
   'voice.auto': 'Automatic',
   'voice.none': 'No system voices found',
+  'pinyin.onlyZh': 'Pinyin only applies to Chinese text',
+  'pinyin.failed': 'Could not load the pinyin dictionary. Check your connection.',
   'hint.block': 'Tap a block to hear it. On a computer, hover over it for two seconds.',
 
   'paste.title': 'Custom reading content',
