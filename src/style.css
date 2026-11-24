@@ -20,6 +20,7 @@
   --c4: #ece5f3;
 
   --read-size: 20px;
+  --print-size: 15pt;
   --radius: 16px;
   --radius-sm: 9px;
   --shadow-sm: 0 1px 2px rgba(43, 42, 38, 0.05);
@@ -164,6 +165,14 @@ body {
 .btn.ghost:hover {
   border-color: var(--line-strong);
   color: var(--ink);
+}
+
+.btn.sm {
+  min-height: 30px;
+  padding: 4px 11px;
+  font-size: 12.5px;
+  border-radius: 8px;
+  white-space: nowrap;
 }
 
 /* ── 工具条 ────────────────────────────────────────────────────────────── */
@@ -446,23 +455,58 @@ select:disabled {
   margin-bottom: 0;
 }
 
+/* 区块单元：色块 + 紧贴其后的标点。间距加在单元外层，标点才不会被推远 */
+.unit {
+  display: inline;
+}
+
+/* 区块之间的间距随辅助等级变化：块越大，间隔越宽，结构才看得出来。
+   中文没有真实空格，全靠这里；英文还有正文空格叠加在上面。 */
+.reader {
+  --gap-1: 0.46em;
+  --gap-2: 0.28em;
+  --gap-3: 0.04em;
+}
+
+.reader[data-lang="zh"] {
+  --gap-1: 0.58em;
+  --gap-2: 0.38em;
+  --gap-3: 0.15em;
+}
+
+.reader[data-level="1"] .unit {
+  margin-right: var(--gap-1);
+}
+
+.reader[data-level="2"] .unit {
+  margin-right: var(--gap-2);
+}
+
+.reader[data-level="3"] .unit {
+  margin-right: var(--gap-3);
+}
+
 .chunk {
   padding: 0.05em 0.26em;
   border-radius: 5px;
   background: var(--c0);
   cursor: pointer;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+  /* 跨行时保持一块连续底色，不要在两行各画一个圆角方块 */
+  box-decoration-break: slice;
+  -webkit-box-decoration-break: slice;
   transition: box-shadow 0.16s ease;
-}
-
-/* 中文靠外边距分隔，英文靠真实空格 + 内边距 */
-.reader[data-lang="zh"] .chunk {
-  margin-right: 0.14em;
 }
 
 .reader[data-lang="en"] .chunk {
   padding: 0.04em 0.2em;
+}
+
+/* 中文词 / 短语区块最多 4 字，禁止跨行，避免「回家/的」这种断在词组中间。
+   英文块含多个单词、宽度不可控，窄屏大字号下 nowrap 会溢出，故不施加。
+   句级长块两端都允许换行。 */
+.reader[data-lang="zh"][data-level="2"] .chunk,
+.reader[data-lang="zh"][data-level="3"] .chunk {
+  white-space: nowrap;
 }
 
 .chunk.c0 {
@@ -779,7 +823,7 @@ textarea {
     border-radius: 0;
     box-shadow: none;
     background: none;
-    font-size: 13pt;
+    font-size: var(--print-size, 15pt);
     line-height: 2.05;
   }
 

@@ -255,9 +255,17 @@ function groupUnits(units: Unit[], lang: Lang, level: Level): Unit[][] {
   }
   flush();
 
-  // 英文不要让区块停在介词、冠词上：把下一块的首词挪过来
+  // 句末 / 句中标点之后是硬边界，后处理不得跨过去
+  const endsHard = (g: Unit[] | undefined): boolean => {
+    if (!g || g.length === 0) return false;
+    const u = g[g.length - 1];
+    return u.stop || u.clause;
+  };
+
+  // 英文不要让区块停在介词、冠词上：把下一块的首词挪过来（不跨句）
   if (lang === 'en') {
     for (let i = 0; i < groups.length - 1; i++) {
+      if (endsHard(groups[i])) continue;
       let guard = 0;
       while (
         guard < 2 &&
@@ -270,8 +278,9 @@ function groupUnits(units: Unit[], lang: Lang, level: Level): Unit[][] {
       }
     }
 
-    // 英文里孤零零一个词成块很不自然，并回上一块
+    // 英文里孤零零一个词成块很不自然，并回上一块（同样不跨句）
     for (let i = 1; i < groups.length; i++) {
+      if (endsHard(groups[i - 1])) continue;
       if (groups[i].length === 1 && unitsSize(groups[i - 1], lang) < max + 1) {
         groups[i - 1] = groups[i - 1].concat(groups[i]);
         groups.splice(i, 1);
@@ -284,7 +293,7 @@ function groupUnits(units: Unit[], lang: Lang, level: Level): Unit[][] {
   if (groups.length > 1) {
     const last = groups[groups.length - 1];
     const lastSize = unitsSize(last, lang);
-    if (last.length === 1 && lastSize < min) {
+    if (last.length === 1 && lastSize < min && !endsHard(groups[groups.length - 2])) {
       const prev = groups[groups.length - 2];
       if (unitsSize(prev, lang) + lastSize <= max + 2) {
         groups.pop();

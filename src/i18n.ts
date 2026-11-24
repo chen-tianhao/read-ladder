@@ -21,7 +21,7 @@ const zh: Dict = {
   'level.hint.3': '每个色块是一个词，适合刚起步的读者。',
 
   'library.title': '内容库',
-  'action.paste': '粘贴文本',
+  'action.paste': '自定义内容',
   'action.export': '导出 PDF',
   'action.cancel': '取消',
   'action.apply': '开始阅读',
@@ -30,7 +30,7 @@ const zh: Dict = {
   'voice.none': '系统未安装语音',
   'hint.block': '点一下色块就会朗读；电脑上把鼠标停在色块上两秒也会朗读。',
 
-  'paste.title': '粘贴一段文字',
+  'paste.title': '自定义阅读内容',
   'paste.desc': '中文或英文都可以，建议整段粘贴，标点会帮你带出停顿。',
   'paste.placeholder': '把要读的文字粘贴到这里…',
   'paste.empty': '请先粘贴一些文字。',
@@ -63,7 +63,7 @@ const en: Dict = {
   'level.hint.3': 'Each block is a single word — for readers just starting out.',
 
   'library.title': 'Library',
-  'action.paste': 'Paste text',
+  'action.paste': 'Customize content',
   'action.export': 'Export PDF',
   'action.cancel': 'Cancel',
   'action.apply': 'Start reading',
@@ -72,7 +72,7 @@ const en: Dict = {
   'voice.none': 'No system voices found',
   'hint.block': 'Tap a block to hear it. On a computer, hover over it for two seconds.',
 
-  'paste.title': 'Paste a passage',
+  'paste.title': 'Custom reading content',
   'paste.desc': 'Chinese or English. Paste a whole paragraph — punctuation carries the pauses.',
   'paste.placeholder': 'Paste the text you want to read…',
   'paste.empty': 'Please paste some text first.',

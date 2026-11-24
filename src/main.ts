@@ -59,6 +59,20 @@ let chunkData: { text: string; lang: Lang }[] = [];
 let speakingEl: HTMLElement | null = null;
 let hoverEl: HTMLElement | null = null;
 let hoverTimer = 0;
+let lastMeta: string[] = [];
+let lastSource = '';
+
+/** 打印页眉：标题 + 文档信息 + 当前辅助等级与字号，方便家长存档比对 */
+function updatePrintHead(): void {
+  ui.printTitle.textContent = currentDoc().title;
+  ui.printMeta.textContent = [
+    lastMeta.join(' · '),
+    lastSource,
+    `${t(state.uiLang, `level.${state.level}`)} · ${state.fontPx}px`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
 
 interface DocView {
   id: string;
@@ -110,18 +124,23 @@ function render(): void {
     for (const c of para.chunks) {
       if (c.lead) p.append(document.createTextNode(c.lead));
 
+      const unit = document.createElement('span');
+      unit.className = 'unit';
+      unit.dataset.i = String(index);
+
       const span = document.createElement('span');
       span.className = `chunk c${index % 5}`;
-      span.dataset.i = String(index);
       span.textContent = c.text;
-      p.append(span);
+      unit.append(span);
 
       if (c.trail) {
         const trail = document.createElement('span');
         trail.className = 'trail';
         trail.textContent = c.trail;
-        p.append(trail);
+        unit.append(trail);
       }
+
+      p.append(unit);
 
       // 英文区块之间塞一个真实空格，复制出来的文本才不会粘在一起
       if (seg.lang === 'en') p.append(document.createTextNode(' '));
@@ -135,6 +154,7 @@ function render(): void {
 
   ui.reader.replaceChildren(frag);
   ui.reader.dataset.lang = seg.lang;
+  ui.reader.dataset.level = String(state.level);
 
   ui.docTitle.textContent = doc.title;
 
@@ -146,8 +166,9 @@ function render(): void {
   ui.docMeta.textContent = meta.join(' · ');
   ui.levelHint.textContent = t(state.uiLang, `level.hint.${state.level}`);
 
-  ui.printTitle.textContent = doc.title;
-  ui.printMeta.textContent = [meta.join(' · '), doc.source].filter(Boolean).join(' · ');
+  lastMeta = meta;
+  lastSource = doc.source;
+  updatePrintHead();
 
   document.title = `${doc.title} · Read Ladder`;
   syncUrl();
@@ -228,6 +249,15 @@ function syncLevelButtons(): void {
   }
 }
 
+/** 界面字号与打印字号一起更新：96dpi 下 1px = 0.75pt */
+function applyFontSize(): void {
+  document.documentElement.style.setProperty('--read-size', `${state.fontPx}px`);
+  document.documentElement.style.setProperty(
+    '--print-size',
+    `${(state.fontPx * 0.75).toFixed(1)}pt`,
+  );
+}
+
 function syncChrome(): void {
   ui.langLabel.textContent = state.uiLang === 'zh' ? 'EN' : '中';
   ui.btnLang.setAttribute(
@@ -236,7 +266,7 @@ function syncChrome(): void {
   );
   ui.rate.value = String(state.rate);
   ui.rateVal.textContent = `${state.rate.toFixed(2)}×`;
-  document.documentElement.style.setProperty('--read-size', `${state.fontPx}px`);
+  applyFontSize();
 }
 
 function applyAll(): void {
@@ -272,7 +302,8 @@ function speakIndex(index: number, node?: HTMLElement | null): void {
   const sel = window.getSelection();
   if (sel && !sel.isCollapsed && sel.toString().trim()) return;
 
-  const target = node ?? ui.reader.querySelector<HTMLElement>(`.chunk[data-i="${index}"]`);
+  const target =
+    node ?? ui.reader.querySelector<HTMLElement>(`.unit[data-i="${index}"] .chunk`);
 
   if (speakingEl && speakingEl !== target) speakingEl.classList.remove('is-speaking');
   speakingEl = target;
@@ -324,33 +355,46 @@ ui.libList.addEventListener('click', (e) => {
   fillVoices();
 });
 
+/** 命中区块单元：单元里包含色块和紧跟的标点，点标点也应该能读 */
+function unitOf(target: EventTarget | null): HTMLElement | null {
+  if (!(target instanceof Element)) return null;
+  return target.closest<HTMLElement>('.unit');
+}
+
 ui.reader.addEventListener('click', (e) => {
-  const target = (e.target as HTMLElement).closest<HTMLElement>('.chunk');
-  if (!target) return;
+  const unit = unitOf(e.target);
+  if (!unit) return;
   clearHover();
-  speakIndex(Number(target.dataset.i), target);
+  speakIndex(Number(unit.dataset.i), unit.querySelector<HTMLElement>('.chunk'));
 });
 
 ui.reader.addEventListener('pointerover', (e) => {
   const pe = e as PointerEvent;
   if (pe.pointerType === 'touch') return;
 
-  const target = (e.target as HTMLElement).closest<HTMLElement>('.chunk');
-  if (!target || target === hoverEl) return;
+  const unit = unitOf(e.target);
+  if (!unit || unit === hoverEl) return;
 
   clearHover();
-  hoverEl = target;
-  const index = Number(target.dataset.i);
+  hoverEl = unit;
+  const index = Number(unit.dataset.i);
+  const node = unit.querySelector<HTMLElement>('.chunk');
 
   hoverTimer = window.setTimeout(() => {
-    if (hoverEl !== target) return;
-    speakIndex(index, target);
+    if (hoverEl !== unit) return;
+    speakIndex(index, node);
   }, 2000);
 });
 
 ui.reader.addEventListener('pointerout', (e) => {
-  const target = (e.target as HTMLElement).closest<HTMLElement>('.chunk');
-  if (target && target === hoverEl) clearHover();
+  const unit = unitOf(e.target);
+  if (!unit || unit !== hoverEl) return;
+
+  // 在同一个区块内部移动（正文↔标点）不该打断计时
+  const to = (e as PointerEvent).relatedTarget;
+  if (to instanceof Node && unit.contains(to)) return;
+
+  clearHover();
 });
 
 window.addEventListener('scroll', () => {
@@ -381,7 +425,8 @@ ui.voice.addEventListener('change', () => {
 
 const setFont = (px: number): void => {
   state.fontPx = Math.min(32, Math.max(16, px));
-  document.documentElement.style.setProperty('--read-size', `${state.fontPx}px`);
+  applyFontSize();
+  updatePrintHead();
   saveState(state);
 };
 
