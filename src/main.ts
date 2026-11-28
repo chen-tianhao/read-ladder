@@ -227,8 +227,6 @@ function render(): void {
   lastSource = doc.source;
   updatePrintHead();
   syncPinyin(seg.lang);
-
-  document.title = `${doc.title} · Read Ladder`;
   syncUrl();
 }
 
@@ -474,8 +472,22 @@ ui.btnLang.addEventListener('click', () => {
   applyAll();
 });
 
+/** 标签页标题固定，不随文档或界面语言变化 */
+const APP_TITLE = '悦读阶梯-ReadLadder';
+
 ui.btnPrint.addEventListener('click', () => {
   speaker.stop();
+
+  // 打印时临时把标题换成文章名，导出的 PDF 才有可辨识的文件名
+  document.title = `${currentDoc().title} · ${APP_TITLE}`;
+
+  const restore = (): void => {
+    document.title = APP_TITLE;
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
+  window.setTimeout(restore, 60000);
+
   window.print();
 });
 
